@@ -175,6 +175,7 @@ body{
   border:0; border-radius:100px;
   background:linear-gradient(135deg, var(--gold-soft) 0%, var(--gold) 52%, #B08D1C 100%);
   color:#14110A;
+  text-decoration:none;              /* кнопка — это ссылка <a> на .vcf */
   font-family:'Inter', sans-serif;
   font-size:clamp(14px, 4vw, 15.5px);
   font-weight:500;
@@ -328,13 +329,15 @@ body{
       <!-- 5. Разделитель -->
       <div class="divider reveal" style="--d:420ms" aria-hidden="true"><span></span><i></i><span></span></div>
 
-      <!-- 6. Главная кнопка -->
-      <button class="cta reveal" id="saveBtn" type="button" style="--d:500ms">
+      <!-- 6. Главная кнопка. Это обычная ссылка на .vcf, а не JS-скачивание:
+           так iOS открывает карточку контакта, а не кладёт файл в «Файлы».
+           href подставляется из CONFIG.contacts.vcfUrl. -->
+      <a class="cta reveal" id="saveBtn" href="#" style="--d:500ms">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+          <circle cx="9.5" cy="8" r="3.6"/><path d="M3 20a6.5 6.5 0 0 1 13 0"/><path d="M19 9.5v5.5M21.75 12.25h-5.5"/>
         </svg>
         <span id="ctaLabel"></span>
-      </button>
+      </a>
 
       <!-- 7. Круглые иконки-ссылки (генерируются из CONFIG.actions) -->
       <nav class="links reveal" id="links" style="--d:580ms" aria-label="Контакты"></nav>
@@ -396,6 +399,10 @@ const CONFIG = {
     whatsapp:    'https://wa.me/998774440013',
     instagram:   'https://instagram.com/portobellotour',
     maps:        'https://maps.app.goo.gl/o7FmVwJsch6SC1XX9',
+    // Готовый файл контакта рядом с index.html. Кнопка ведёт прямо на него —
+    // iOS открывает карточку контакта. Пересобрать после правки CONFIG:
+    // открыть страницу с ?export в адресе и нажать кнопку, файл скачается.
+    vcfUrl:      'nozima-jumadullayeva.vcf',
     address: {
       street:  'Botkin Street 119',
       city:    'Tashkent',
@@ -465,6 +472,7 @@ const ICONS = {
   img.src = CONFIG.photo.page;
   img.alt = p.displayName + ' — ' + p.title;
 
+  document.getElementById('saveBtn').href           = c.vcfUrl;
   document.getElementById('name').textContent      = p.displayName;
   document.getElementById('role').textContent      = p.title;
   document.getElementById('bio').textContent       = p.bio;
@@ -583,44 +591,39 @@ function isInAppBrowser(){
 }
 
 /**
- * Скачивание .vcf.
- * Основной путь — Blob + <a download>: работает в iOS Safari 13+, Android Chrome
- * и десктопных браузерах. Запасной путь для старых WebView без поддержки download —
- * переход на data:-URL, который открывается карточкой нового контакта.
+ * Режим пересборки файла: откройте страницу с ?export в адресе и нажмите кнопку —
+ * вместо перехода по ссылке скачается свежий .vcf, собранный из текущего CONFIG.
+ * Этот файл кладётся рядом с index.html, и кнопка снова ведёт на него.
+ * Нужен только при подготовке визитки, обычный посетитель сюда не попадает.
  */
-function saveContact(){
+function exportVCard(){
   const vcf = buildVCard();
-  const fileName = (CONFIG.ui.vcfFileName || 'contact') + '.vcf';
-
-  // лёгкая вибрация как тактильный отклик (Android; iOS игнорирует)
-  if (navigator.vibrate) { try { navigator.vibrate(12); } catch(e){} }
-
+  const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const supportsDownload = 'download' in a;
-
-  try {
-    if (supportsDownload && window.Blob && window.URL && window.URL.createObjectURL) {
-      const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = fileName;
-      a.rel = 'noopener';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 4000);
-    } else {
-      window.location.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcf);
-    }
-    // Никаких сообщений при успехе: дальше говорит сам телефон — открывается
-    // карточка контакта. Предупреждаем только там, где сохранение заведомо не сработает.
-    if (isInAppBrowser()) toast(CONFIG.ui.toastInApp);
-  } catch (err) {
-    toast(CONFIG.ui.toastFail);
-  }
+  a.href = url;
+  a.download = (CONFIG.ui.vcfFileName || 'contact') + '.vcf';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 4000);
 }
 
-document.getElementById('saveBtn').addEventListener('click', saveContact);
+/* Поведение кнопки.
+   Обычный режим: это просто ссылка на .vcf — браузер и телефон делают всё сами,
+   страница не вмешивается. Мы только даём тактильный отклик и предупреждаем,
+   если страницу открыли во встроенном браузере соцсети, где ссылка не сработает. */
+document.getElementById('saveBtn').addEventListener('click', function(e){
+  if (navigator.vibrate) { try { navigator.vibrate(12); } catch(err){} }
+
+  if (/(^|[?&])export($|[=&])/.test(location.search)) {
+    e.preventDefault();
+    exportVCard();
+    return;
+  }
+
+  if (isInAppBrowser()) toast(CONFIG.ui.toastInApp);
+});
 </script>
 </body>
 </html>
