@@ -329,15 +329,9 @@ body{
       <!-- 5. Разделитель -->
       <div class="divider reveal" style="--d:420ms" aria-hidden="true"><span></span><i></i><span></span></div>
 
-      <!-- 6. Главная кнопка. Это обычная ссылка на .vcf, а не JS-скачивание:
-           так iOS открывает карточку контакта, а не кладёт файл в «Файлы».
-           href подставляется из CONFIG.contacts.vcfUrl. -->
-      <a class="cta reveal" id="saveBtn" href="#" style="--d:500ms">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="9.5" cy="8" r="3.6"/><path d="M3 20a6.5 6.5 0 0 1 13 0"/><path d="M19 9.5v5.5M21.75 12.25h-5.5"/>
-        </svg>
-        <span id="ctaLabel"></span>
-      </a>
+      <!-- 6. Главная кнопка. Что именно на ней — задаётся в CONFIG.cta:
+           иконка, подпись и ссылка. Содержимое подставляется из конфига. -->
+      <a class="cta reveal" id="ctaBtn" href="#" style="--d:500ms"></a>
 
       <!-- 7. Круглые иконки-ссылки (генерируются из CONFIG.actions) -->
       <nav class="links reveal" id="links" style="--d:580ms" aria-label="Контакты"></nav>
@@ -415,9 +409,18 @@ const CONFIG = {
     }
   },
 
+  /* --- Главная кнопка: самое заметное действие на странице.
+         Здесь это WhatsApp с готовым текстом — человек жмёт «отправить»,
+         и его номер оказывается у владельца визитки. Это ценнее, чем
+         надежда на то, что он сам сохранит контакт и когда-нибудь напишет. --- */
+  cta: {
+    id:    'whatsapp',                      // иконка берётся из ICONS по этому id
+    label: 'Написать в WhatsApp',
+    href:  c => c.whatsapp + (c.whatsappText ? '?text=' + encodeURIComponent(c.whatsappText) : '')
+  },
+
   /* --- Тексты интерфейса --- */
   ui: {
-    saveLabel:   'Сохранить контакт',
     // Подсказки показываются ТОЛЬКО когда кнопка реально не может сработать.
     // При нормальном нажатии никаких надписей нет: телефон сам открывает карточку контакта.
     toastInApp:  'Встроенный браузер блокирует сохранение. Откройте страницу в Safari или Chrome.',
@@ -433,18 +436,19 @@ const CONFIG = {
 
   /* --- Ряд круглых кнопок. Порядок здесь = порядок на экране --- */
   actions: [
-    { id:'phone',     label:'Позвонить', href: c => 'tel:' + c.phone },
-    { id:'telegram',  label:'Telegram',  href: c => c.telegram },
-    { id:'whatsapp',  label:'WhatsApp',  href: c => c.whatsapp + (c.whatsappText ? '?text=' + encodeURIComponent(c.whatsappText) : '') },
-    { id:'instagram', label:'Instagram', href: c => c.instagram },
-    { id:'email',     label:'Email',     href: c => 'mailto:' + c.email },
-    { id:'website',   label:'Сайт',      href: c => c.website },
-    { id:'map',       label:'Адрес',     href: c => c.maps }
+    { id:'savecontact', label:'Сохранить контакт', href: c => c.vcfUrl },
+    { id:'phone',       label:'Позвонить',         href: c => 'tel:' + c.phone },
+    { id:'telegram',    label:'Telegram',          href: c => c.telegram },
+    { id:'instagram',   label:'Instagram',         href: c => c.instagram },
+    { id:'email',       label:'Email',             href: c => 'mailto:' + c.email },
+    { id:'website',     label:'Сайт',              href: c => c.website },
+    { id:'map',         label:'Адрес',             href: c => c.maps }
   ]
 };
 
 /* --- Иконки 24x24: тонкие штриховые + фирменные глифы соцсетей --- */
 const ICONS = {
+  savecontact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="8" r="3.6"/><path d="M3 20a6.5 6.5 0 0 1 13 0"/><path d="M19 9.5v5.5M21.75 12.25h-5.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.6 13.3a1.6 1.6 0 0 1 2.2 0l1.7 1.6a1.6 1.6 0 0 1 0 2.3l-.8.8c-1.1 1.1-2.8 1.3-4.2.5a20.6 20.6 0 0 1-8-8c-.8-1.4-.6-3.1.5-4.2l.8-.8a1.6 1.6 0 0 1 2.3 0l1.6 1.7a1.6 1.6 0 0 1 0 2.2l-.9.9c.9 1.9 2.5 3.5 4.4 4.4z"/></svg>',
   telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.6 18.9 19.2c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.47.47-.96.47l.34-4.85 8.8-7.95c.38-.34-.08-.53-.6-.19L6.14 12.02l-4.66-1.46c-1.01-.32-1.03-1.01.21-1.49L20.6 3.13c.84-.31 1.58.2 1.34 1.47z"/></svg>',
   whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.62.7.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.7.25-1.29.18-1.42-.08-.12-.28-.2-.58-.35M12.05 21.78h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.89 9.89-9.89 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.43 9.89-9.88 9.89m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.89-11.9 0-3.17-1.24-6.16-3.48-8.41"/></svg>',
@@ -475,11 +479,16 @@ const ICONS = {
   img.src = CONFIG.photo.page;
   img.alt = p.displayName + ' — ' + p.title;
 
-  document.getElementById('saveBtn').href           = c.vcfUrl;
   document.getElementById('name').textContent      = p.displayName;
   document.getElementById('role').textContent      = p.title;
   document.getElementById('bio').textContent       = p.bio;
-  document.getElementById('ctaLabel').textContent  = CONFIG.ui.saveLabel;
+  // Главная кнопка собирается из CONFIG.cta
+  const cta = document.getElementById('ctaBtn');
+  cta.href = typeof CONFIG.cta.href === 'function' ? CONFIG.cta.href(c) : CONFIG.cta.href;
+  cta.innerHTML = (ICONS[CONFIG.cta.id] || '') + '<span></span>';
+  cta.querySelector('span').textContent = CONFIG.cta.label;
+  if (/^https?:/i.test(cta.href)) { cta.target = '_blank'; cta.rel = 'noopener noreferrer'; }
+
   document.getElementById('brandName').textContent = b.name;
   document.getElementById('tagline').textContent   = b.tagline;
   document.title = p.displayName + ' — ' + b.name;
@@ -492,6 +501,7 @@ const ICONS = {
     const el = document.createElement('a');
     el.href = href;
     el.innerHTML = ICONS[a.id] || '';
+    el.dataset.id = a.id;
     el.setAttribute('aria-label', a.label);
     el.title = a.label;
     // внешние ссылки — в новой вкладке; tel:/mailto: — в текущей
@@ -612,20 +622,24 @@ function exportVCard(){
   setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 4000);
 }
 
-/* Поведение кнопки.
-   Обычный режим: это просто ссылка на .vcf — браузер и телефон делают всё сами,
-   страница не вмешивается. Мы только даём тактильный отклик и предупреждаем,
-   если страницу открыли во встроенном браузере соцсети, где ссылка не сработает. */
-document.getElementById('saveBtn').addEventListener('click', function(e){
-  if (navigator.vibrate) { try { navigator.vibrate(12); } catch(err){} }
+/* Поведение кнопок.
+   Все они — обычные ссылки, страница в переход не вмешивается: телефон делает
+   всё сам. JS добавляет только тактильный отклик, а для контакта — предупреждение
+   во встроенных браузерах соцсетей и режим пересборки файла. */
+document.querySelectorAll('.cta, .links a').forEach(function(el){
+  el.addEventListener('click', function(e){
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch(err){} }
 
-  if (/(^|[?&])export($|[=&])/.test(location.search)) {
-    e.preventDefault();
-    exportVCard();
-    return;
-  }
+    // всё дальнейшее касается только ссылки на файл контакта
+    if (el.dataset.id !== 'savecontact') return;
 
-  if (isInAppBrowser()) toast(CONFIG.ui.toastInApp);
+    if (/(^|[?&])export($|[=&])/.test(location.search)) {
+      e.preventDefault();
+      exportVCard();
+      return;
+    }
+    if (isInAppBrowser()) toast(CONFIG.ui.toastInApp);
+  });
 });
 </script>
 </body>
