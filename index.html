@@ -397,6 +397,9 @@ const CONFIG = {
     website:     'https://portobellotour.uz',
     telegram:    'https://t.me/portobellotour',
     whatsapp:    'https://wa.me/998774440013',
+    // Текст, который окажется уже набранным в чате. Человеку остаётся нажать
+    // «отправить» — и его номер попадает к Нозиме. Это ценнее сохранённого контакта.
+    whatsappText:'Здравствуйте! Я по визитке Porto Bello Tour — хочу подобрать поездку.',
     instagram:   'https://instagram.com/portobellotour',
     maps:        'https://maps.app.goo.gl/o7FmVwJsch6SC1XX9',
     // Готовый файл контакта рядом с index.html. Кнопка ведёт прямо на него —
@@ -432,7 +435,7 @@ const CONFIG = {
   actions: [
     { id:'phone',     label:'Позвонить', href: c => 'tel:' + c.phone },
     { id:'telegram',  label:'Telegram',  href: c => c.telegram },
-    { id:'whatsapp',  label:'WhatsApp',  href: c => c.whatsapp },
+    { id:'whatsapp',  label:'WhatsApp',  href: c => c.whatsapp + (c.whatsappText ? '?text=' + encodeURIComponent(c.whatsappText) : '') },
     { id:'instagram', label:'Instagram', href: c => c.instagram },
     { id:'email',     label:'Email',     href: c => 'mailto:' + c.email },
     { id:'website',   label:'Сайт',      href: c => c.website },
