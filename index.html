@@ -408,9 +408,10 @@ const CONFIG = {
   /* --- Тексты интерфейса --- */
   ui: {
     saveLabel:   'Сохранить контакт',
-    toastSaved:  'Контакт скачивается — откройте файл и нажмите «Создать новый контакт».',
-    toastInApp:  'Встроенный браузер блокирует загрузку. Откройте страницу в Safari или Chrome — кнопка сработает.',
-    toastFail:   'Не удалось скачать. Откройте страницу в Safari или Chrome и повторите.',
+    // Подсказки показываются ТОЛЬКО когда кнопка реально не может сработать.
+    // При нормальном нажатии никаких надписей нет: телефон сам открывает карточку контакта.
+    toastInApp:  'Встроенный браузер блокирует сохранение. Откройте страницу в Safari или Chrome.',
+    toastFail:   'Не удалось открыть контакт. Откройте страницу в Safari или Chrome и повторите.',
     vcfFileName: 'Nozima_Jumadullayeva'     // имя файла без расширения
   },
 
@@ -611,7 +612,9 @@ function saveContact(){
     } else {
       window.location.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcf);
     }
-    toast(isInAppBrowser() ? CONFIG.ui.toastInApp : CONFIG.ui.toastSaved);
+    // Никаких сообщений при успехе: дальше говорит сам телефон — открывается
+    // карточка контакта. Предупреждаем только там, где сохранение заведомо не сработает.
+    if (isInAppBrowser()) toast(CONFIG.ui.toastInApp);
   } catch (err) {
     toast(CONFIG.ui.toastFail);
   }
