@@ -260,6 +260,25 @@ body{
   opacity:.8;
 }
 
+/* ---------- Подпись-ссылка «хотите такую же визитку» ---------- */
+.promo{
+  display:inline-flex; align-items:center; gap:7px;
+  margin-top:clamp(8px, 1.4vh, 13px);
+  padding:7px 15px;
+  border:1px solid var(--surface-line);
+  border-radius:100px;
+  background:rgba(255,255,255,.03);
+  color:var(--muted);
+  font-size:clamp(10.5px, 2.9vw, 11.5px);
+  letter-spacing:.02em;
+  text-decoration:none;
+  transition:transform .18s var(--ease), border-color .25s var(--ease), color .25s var(--ease);
+}
+.promo svg{ width:12px; height:12px; flex:none; opacity:.8; }
+.promo:active{ transform:scale(.95); border-color:var(--gold); color:var(--gold-soft); }
+.promo:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+@media (hover:hover){ .promo:hover{ border-color:var(--gold); color:var(--gold-soft); } }
+
 /* ---------- Уведомление (тост) ---------- */
 .toast{
   position:fixed; left:50%; translate:-50% 0;
@@ -342,6 +361,7 @@ body{
       <div class="mark" aria-hidden="true"></div>
       <div class="logo" id="brandName"></div>
       <p class="tagline" id="tagline"></p>
+      <a class="promo" id="promo" hidden target="_blank" rel="noopener noreferrer"></a>
     </footer>
   </main>
 
@@ -420,6 +440,14 @@ const CONFIG = {
     href:  c => c.telegram
   },
 
+  /* --- Скромная подпись-ссылка в самом низу: «хотите такую же визитку».
+         Не спорит с главной кнопкой, но даёт переход к автору.
+         Убрать у клиента, который этого не хочет: поставить url пустым. --- */
+  promo: {
+    text: 'Хотите такую же визитку?',
+    url:  'https://m1ran21.github.io/miran/'
+  },
+
   /* --- Тексты интерфейса --- */
   ui: {
     // Подсказки показываются ТОЛЬКО когда кнопка реально не может сработать.
@@ -492,6 +520,15 @@ const ICONS = {
 
   document.getElementById('brandName').textContent = b.name;
   document.getElementById('tagline').textContent   = b.tagline;
+
+  // Подпись-ссылка внизу. Нет url в конфиге — элемента на странице нет
+  const promo = document.getElementById('promo');
+  if (CONFIG.promo && CONFIG.promo.url) {
+    promo.href = CONFIG.promo.url;
+    promo.innerHTML = '<span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg>';
+    promo.querySelector('span').textContent = CONFIG.promo.text;
+    promo.hidden = false;
+  }
   document.title = p.displayName + ' — ' + b.name;
 
   // Круглые кнопки
