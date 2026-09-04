@@ -410,13 +410,14 @@ const CONFIG = {
   },
 
   /* --- Главная кнопка: самое заметное действие на странице.
-         Здесь это WhatsApp с готовым текстом — человек жмёт «отправить»,
-         и его номер оказывается у владельца визитки. Это ценнее, чем
-         надежда на то, что он сам сохранит контакт и когда-нибудь напишет. --- */
+         Ставка на переписку, а не на сохранение контакта: человек пишет сразу,
+         и его контакт оказывается у владельца визитки, а не наоборот.
+         Telegram не поддерживает предзаполненный текст в личных чатах
+         (параметр ?text= работает только у ботов), поэтому чат открывается пустым. --- */
   cta: {
-    id:    'whatsapp',                      // иконка берётся из ICONS по этому id
-    label: 'Написать в WhatsApp',
-    href:  c => c.whatsapp + (c.whatsappText ? '?text=' + encodeURIComponent(c.whatsappText) : '')
+    id:    'telegram',                      // иконка берётся из ICONS по этому id
+    label: 'Написать в Telegram',
+    href:  c => c.telegram
   },
 
   /* --- Тексты интерфейса --- */
@@ -438,7 +439,7 @@ const CONFIG = {
   actions: [
     { id:'savecontact', label:'Сохранить контакт', href: c => c.vcfUrl },
     { id:'phone',       label:'Позвонить',         href: c => 'tel:' + c.phone },
-    { id:'telegram',    label:'Telegram',          href: c => c.telegram },
+    { id:'whatsapp',    label:'WhatsApp',          href: c => c.whatsapp + (c.whatsappText ? '?text=' + encodeURIComponent(c.whatsappText) : '') },
     { id:'instagram',   label:'Instagram',         href: c => c.instagram },
     { id:'email',       label:'Email',             href: c => 'mailto:' + c.email },
     { id:'website',     label:'Сайт',              href: c => c.website },
