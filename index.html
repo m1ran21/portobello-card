@@ -41,7 +41,8 @@
 
 *,*::before,*::after{ box-sizing:border-box; }
 
-html,body{ height:100%; }
+html{ scroll-behavior:smooth; }        /* плавный переход по стрелке «листайте» */
+html,body{ min-height:100%; }
 
 body{
   margin:0;
@@ -260,6 +261,107 @@ body{
   opacity:.8;
 }
 
+/* ---------- Стрелка «листайте дальше» ---------- */
+.scroll-hint{
+  display:grid; place-items:center;
+  width:32px; height:32px;
+  margin-top:clamp(6px, 1.2vh, 12px);
+  color:var(--gold); opacity:.7;
+  animation:bob 2.1s ease-in-out infinite;
+}
+.scroll-hint svg{ width:16px; height:16px; }
+@keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(5px); } }
+
+/* ---------- Вторая секция: маршрут с остановками ---------- */
+.routes{
+  position:relative; z-index:1;
+  max-width:520px; margin-inline:auto;
+  padding:clamp(38px, 7vh, 70px) 20px 0;
+}
+.sec-head{ text-align:center; margin-bottom:clamp(24px, 4vh, 38px); }
+.sec-kicker{
+  display:block;
+  color:var(--gold);
+  font-size:clamp(9.5px, 2.7vw, 10.5px);
+  text-transform:uppercase; letter-spacing:.26em; text-indent:.26em;
+  margin-bottom:9px;
+}
+.sec-title{
+  margin:0;
+  font-family:'Playfair Display', Georgia, serif;
+  font-weight:500;
+  font-size:clamp(21px, 5.8vw, 27px);
+  line-height:1.25;
+}
+
+/* Пунктирная нить слева и ромбы-остановки на ней */
+.route{ list-style:none; margin:0; padding:0 0 0 30px; position:relative; }
+.route::before{
+  content:''; position:absolute; left:6px; top:10px; bottom:10px;
+  width:1px;
+  background:repeating-linear-gradient(to bottom, var(--line) 0 5px, transparent 5px 11px);
+}
+.route li{
+  position:relative;
+  margin-bottom:clamp(16px, 2.8vh, 26px);
+  opacity:0; transform:translateY(18px);
+  transition:opacity .7s var(--ease), transform .7s var(--ease);
+}
+.route li:last-child{ margin-bottom:0; }
+.route li.is-in{ opacity:1; transform:none; }
+.route li::before{                 /* точка остановки поверх нити */
+  content:''; position:absolute; left:-28px; top:18px;
+  width:8px; height:8px; rotate:45deg;
+  background:var(--gold);
+  box-shadow:0 0 0 4px var(--bg), 0 0 12px rgba(201,162,39,.75);
+}
+
+.stop{
+  position:relative; display:block;
+  border-radius:16px; overflow:hidden;
+  border:1px solid var(--surface-line);
+  aspect-ratio:16/10;
+  background:#141416;
+  box-shadow:0 14px 32px rgba(0,0,0,.45);
+}
+.stop img{
+  display:block; width:100%; height:100%;
+  object-fit:cover;
+}
+.stop::after{                      /* затемнение под подписью */
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(6,6,9,.9) 0%, rgba(6,6,9,.3) 42%, transparent 68%);
+}
+.stop b{
+  position:absolute; left:15px; bottom:12px; z-index:1;
+  font-family:'Playfair Display', Georgia, serif;
+  font-weight:500;
+  font-size:clamp(16px, 4.4vw, 19px);
+  letter-spacing:.01em;
+}
+.stop small{
+  position:absolute; right:15px; bottom:16px; z-index:1;
+  color:var(--gold);
+  font-size:clamp(9px, 2.5vw, 10px);
+  text-transform:uppercase; letter-spacing:.18em;
+}
+
+/* ---------- Закрывающий блок ---------- */
+.outro{
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center;
+  max-width:520px; margin-inline:auto;
+  padding:clamp(32px, 6vh, 58px) 20px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  text-align:center;
+}
+.outro-text{
+  margin:0 0 clamp(16px, 2.6vh, 24px);
+  max-width:28ch;
+  color:var(--muted);
+  font-size:clamp(12.5px, 3.5vw, 14px);
+  line-height:1.6;
+}
+
 /* ---------- Подпись-ссылка «хотите такую же визитку» ---------- */
 .promo{
   display:inline-flex; align-items:center; gap:7px;
@@ -316,7 +418,10 @@ body{
 }
 
 @media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
   .reveal{ animation:none; opacity:1; }
+  .scroll-hint{ animation:none; }
+  .route li{ opacity:1; transform:none; }   /* остановки видны без прокрутки */
   *{ transition-duration:.01ms !important; }
 }
 
@@ -361,9 +466,27 @@ body{
       <div class="mark" aria-hidden="true"></div>
       <div class="logo" id="brandName"></div>
       <p class="tagline" id="tagline"></p>
-      <a class="promo" id="promo" hidden target="_blank" rel="noopener noreferrer"></a>
+      <a class="scroll-hint" href="#routes" aria-label="Смотреть направления">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </a>
     </footer>
   </main>
+
+  <!-- Вторая секция: маршрут с остановками (CONFIG.routes) -->
+  <section class="routes" id="routes">
+    <header class="sec-head">
+      <span class="sec-kicker" id="routesKicker"></span>
+      <h2 class="sec-title" id="routesTitle"></h2>
+    </header>
+    <ol class="route" id="routeList"></ol>
+  </section>
+
+  <!-- Закрывающий блок: последнее слово и кнопка -->
+  <section class="outro">
+    <p class="outro-text" id="outroText"></p>
+    <a class="cta" id="ctaBtn2" href="#"></a>
+    <a class="promo" id="promo" hidden target="_blank" rel="noopener noreferrer"></a>
+  </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -438,6 +561,27 @@ const CONFIG = {
     id:    'telegram',                      // иконка берётся из ICONS по этому id
     label: 'Написать в Telegram',
     href:  c => c.telegram
+  },
+
+  /* --- Вторая секция: маршрут с остановками.
+         Сейчас это направления с фотографиями из открытых источников.
+         Когда появятся согласованные кадры клиентов из поездок — просто
+         замените файлы в папке img и подписи ниже. Пустой items — секции нет. --- */
+  routes: {
+    kicker: 'Направления',
+    title:  'Куда мы отправляем',
+    items: [
+      { img:'img/dubai.jpg',    city:'Дубай',    note:'ОАЭ' },
+      { img:'img/istanbul.jpg', city:'Стамбул',  note:'Турция' },
+      { img:'img/maldives.jpg', city:'Мальдивы', note:'Индийский океан' },
+      { img:'img/paris.jpg',    city:'Париж',    note:'Франция' },
+      { img:'img/greece.jpg',   city:'Греция',   note:'Эгейское море' }
+    ]
+  },
+
+  /* --- Закрывающий блок под маршрутом --- */
+  outro: {
+    text: 'Расскажите, куда хотите поехать — соберу маршрут под вас.'
   },
 
   /* --- Скромная подпись-ссылка в самом низу: «хотите такую же визитку».
@@ -520,6 +664,59 @@ const ICONS = {
 
   document.getElementById('brandName').textContent = b.name;
   document.getElementById('tagline').textContent   = b.tagline;
+
+  // Та же кнопка внизу страницы: прокрутив маршрут, человек не должен
+  // возвращаться наверх, чтобы написать
+  const cta2 = document.getElementById('ctaBtn2');
+  cta2.href = cta.href;
+  cta2.innerHTML = cta.innerHTML;
+  if (cta.target) { cta2.target = cta.target; cta2.rel = cta.rel; }
+
+  // Маршрут с остановками
+  const routes = CONFIG.routes;
+  if (routes && routes.items && routes.items.length) {
+    document.getElementById('routesKicker').textContent = routes.kicker;
+    document.getElementById('routesTitle').textContent  = routes.title;
+
+    const list = document.getElementById('routeList');
+    routes.items.forEach(function(it){
+      const li  = document.createElement('li');
+      const fig = document.createElement('figure');
+      fig.className = 'stop';
+      const img = document.createElement('img');
+      img.src = it.img;
+      img.alt = it.city;
+      img.loading = 'lazy';           // фото ниже первого экрана грузятся по мере прокрутки
+      img.decoding = 'async';
+      const name = document.createElement('b');
+      name.textContent = it.city;
+      fig.append(img, name);
+      if (it.note) {
+        const note = document.createElement('small');
+        note.textContent = it.note;
+        fig.appendChild(note);
+      }
+      li.appendChild(fig);
+      list.appendChild(li);
+    });
+
+    // Остановки проявляются по мере прокрутки. Нет IntersectionObserver —
+    // показываем всё сразу, страница не должна остаться пустой
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '0px 0px -12% 0px' });
+      list.querySelectorAll('li').forEach(function(li){ io.observe(li); });
+    } else {
+      list.querySelectorAll('li').forEach(function(li){ li.classList.add('is-in'); });
+    }
+  } else {
+    document.getElementById('routes').remove();
+  }
+
+  if (CONFIG.outro && CONFIG.outro.text) document.getElementById('outroText').textContent = CONFIG.outro.text;
 
   // Подпись-ссылка внизу. Нет url в конфиге — элемента на странице нет
   const promo = document.getElementById('promo');
