@@ -347,6 +347,66 @@ body{
   text-transform:uppercase; letter-spacing:.18em;
 }
 
+/* ---------- Отзывы ---------- */
+.reviews{
+  position:relative; z-index:1;
+  max-width:520px; margin-inline:auto;
+  padding:clamp(38px, 7vh, 66px) 20px 0;
+}
+.rev-list{ display:flex; flex-direction:column; gap:clamp(11px, 2vh, 16px); }
+.rev{
+  position:relative;
+  margin:0;
+  padding:17px 18px 15px;
+  border:1px solid var(--surface-line);
+  border-radius:16px;
+  background:rgba(255,255,255,.028);
+  opacity:0; transform:translateY(16px);
+  transition:opacity .7s var(--ease), transform .7s var(--ease);
+}
+.rev.is-in{ opacity:1; transform:none; }
+.rev::before{                      /* декоративная кавычка */
+  content:'”';
+  position:absolute; top:0; right:16px;
+  font-family:'Playfair Display', Georgia, serif;
+  font-size:50px; line-height:1;
+  color:var(--gold); opacity:.2;
+  pointer-events:none;
+}
+.rev blockquote{
+  margin:0 0 11px;
+  font-size:clamp(12.5px, 3.4vw, 13.5px);
+  line-height:1.6;
+  color:var(--text); opacity:.92;
+}
+.rev figcaption{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 9px; }
+.rev b{
+  color:var(--gold);
+  font-size:clamp(10px, 2.8vw, 11px);
+  font-weight:500;
+  text-transform:uppercase; letter-spacing:.14em;
+}
+.rev small{ color:var(--muted); font-size:clamp(10px, 2.8vw, 11px); }
+
+/* ---------- Кнопка «поделиться» ---------- */
+.share{
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  margin-top:clamp(10px, 1.8vh, 15px);
+  padding:12px 22px;
+  border:1px solid var(--surface-line);
+  border-radius:100px;
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  font-family:'Inter', sans-serif;
+  font-size:clamp(12.5px, 3.4vw, 13.5px);
+  text-decoration:none; cursor:pointer;
+  transition:transform .18s var(--ease), border-color .25s var(--ease), color .25s var(--ease);
+}
+.share svg{ width:16px; height:16px; flex:none; }
+.share:active{ transform:scale(.96); border-color:var(--gold); color:var(--gold-soft); }
+.share:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+@media (hover:hover){ .share:hover{ border-color:var(--gold); } }
+
 /* ---------- Закрывающий блок ---------- */
 .outro{
   position:relative; z-index:1;
@@ -422,7 +482,7 @@ body{
   html{ scroll-behavior:auto; }
   .reveal{ animation:none; opacity:1; }
   .scroll-hint{ animation:none; }
-  .route li{ opacity:1; transform:none; }   /* остановки видны без прокрутки */
+  .route li, .rev{ opacity:1; transform:none; }   /* блоки видны без прокрутки */
   *{ transition-duration:.01ms !important; }
 }
 
@@ -482,10 +542,20 @@ body{
     <ol class="route" id="routeList"></ol>
   </section>
 
+  <!-- Отзывы (CONFIG.reviews) -->
+  <section class="reviews" id="reviews">
+    <header class="sec-head">
+      <span class="sec-kicker" id="revKicker"></span>
+      <h2 class="sec-title" id="revTitle"></h2>
+    </header>
+    <div class="rev-list" id="revList"></div>
+  </section>
+
   <!-- Закрывающий блок: последнее слово и кнопка -->
   <section class="outro">
     <p class="outro-text" id="outroText"></p>
     <a class="cta" id="ctaBtn2" href="#"></a>
+    <button class="share" id="shareBtn" type="button" hidden></button>
     <a class="promo" id="promo" hidden target="_blank" rel="noopener noreferrer"></a>
   </section>
 
@@ -580,6 +650,20 @@ const CONFIG = {
     ]
   },
 
+  /* --- Отзывы. СЕЙЧАС ЗДЕСЬ ЗАГЛУШКИ: текст написан как шаблон, а не как
+         чужие слова — выдуманный отзыв с настоящим именем это враньё,
+         которое клиент однажды заметит. Возьмите у Нозимы реальные слова
+         и замените. Чтобы временно спрятать блок целиком: items: []. --- */
+  reviews: {
+    kicker: 'Отзывы',
+    title:  'Что говорят клиенты',
+    items: [
+      { text:'Здесь будет отзыв клиента: пара строк о том, как прошла поездка и что сделала Нозима.', name:'Имя клиента', trip:'Направление, год' },
+      { text:'Второй отзыв. Лучше всего работают короткие и конкретные: что было сложно и как это решили.', name:'Имя клиента', trip:'Направление, год' },
+      { text:'Третий отзыв. Достаточно трёх — больше их никто не читает.', name:'Имя клиента', trip:'Направление, год' }
+    ]
+  },
+
   /* --- Закрывающий блок под маршрутом --- */
   outro: {
     text: 'Расскажите, куда хотите поехать — соберу маршрут под вас.'
@@ -597,6 +681,8 @@ const CONFIG = {
   ui: {
     // Подсказки показываются ТОЛЬКО когда кнопка реально не может сработать.
     // При нормальном нажатии никаких надписей нет: телефон сам открывает карточку контакта.
+    shareLabel:  'Поделиться визиткой',
+    shareCopied: 'Ссылка скопирована — отправьте её кому нужно.',
     toastInApp:  'Встроенный браузер блокирует сохранение. Откройте страницу в Safari или Chrome.',
     toastFail:   'Не удалось открыть контакт. Откройте страницу в Safari или Chrome и повторите.',
     vcfFileName: 'Nozima_Jumadullayeva'     // имя файла без расширения
@@ -619,6 +705,23 @@ const CONFIG = {
     { id:'map',         label:'Адрес',             href: c => c.maps }
   ]
 };
+
+/**
+ * Проявление блоков по мере прокрутки. Если IntersectionObserver недоступен,
+ * показываем всё сразу: страница не должна остаться пустой ни при каких условиях.
+ */
+function revealOnScroll(nodes){
+  if (!('IntersectionObserver' in window)) {
+    nodes.forEach(function(n){ n.classList.add('is-in'); });
+    return;
+  }
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -12% 0px' });
+  nodes.forEach(function(n){ io.observe(n); });
+}
 
 /* --- Иконки 24x24: тонкие штриховые + фирменные глифы соцсетей --- */
 const ICONS = {
@@ -701,23 +804,65 @@ const ICONS = {
       list.appendChild(li);
     });
 
-    // Остановки проявляются по мере прокрутки. Нет IntersectionObserver —
-    // показываем всё сразу, страница не должна остаться пустой
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-          if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-        });
-      }, { rootMargin: '0px 0px -12% 0px' });
-      list.querySelectorAll('li').forEach(function(li){ io.observe(li); });
-    } else {
-      list.querySelectorAll('li').forEach(function(li){ li.classList.add('is-in'); });
-    }
+    revealOnScroll(list.querySelectorAll('li'));
   } else {
     document.getElementById('routes').remove();
   }
 
+  // Отзывы
+  const rev = CONFIG.reviews;
+  if (rev && rev.items && rev.items.length) {
+    document.getElementById('revKicker').textContent = rev.kicker;
+    document.getElementById('revTitle').textContent  = rev.title;
+
+    const box = document.getElementById('revList');
+    rev.items.forEach(function(it){
+      const fig = document.createElement('figure');
+      fig.className = 'rev';
+      const q = document.createElement('blockquote');
+      q.textContent = it.text;
+      const cap = document.createElement('figcaption');
+      const nm = document.createElement('b');
+      nm.textContent = it.name;
+      cap.appendChild(nm);
+      if (it.trip) {
+        const tr = document.createElement('small');
+        tr.textContent = it.trip;
+        cap.appendChild(tr);
+      }
+      fig.append(q, cap);
+      box.appendChild(fig);
+    });
+
+    revealOnScroll(box.querySelectorAll('.rev'));
+  } else {
+    document.getElementById('reviews').remove();
+  }
+
   if (CONFIG.outro && CONFIG.outro.text) document.getElementById('outroText').textContent = CONFIG.outro.text;
+
+  // Кнопка «поделиться»: системное меню телефона, а если его нет — копирование ссылки
+  const share = document.getElementById('shareBtn');
+  share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5"/><path d="m8 7 4-4 4 4"/><path d="M5 13v5.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V13"/></svg><span></span>';
+  share.querySelector('span').textContent = CONFIG.ui.shareLabel;
+  share.hidden = false;
+  share.addEventListener('click', async function(){
+    const data = {
+      title: p.displayName + ' — ' + b.name,
+      text:  p.bio,
+      url:   location.href.split('?')[0].split('#')[0]
+    };
+    if (navigator.share) {
+      try { await navigator.share(data); } catch (e) { /* человек закрыл меню — это не ошибка */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(data.url);
+      toast(CONFIG.ui.shareCopied);
+    } catch (e) {
+      toast(data.url);
+    }
+  });
 
   // Подпись-ссылка внизу. Нет url в конфиге — элемента на странице нет
   const promo = document.getElementById('promo');
@@ -862,7 +1007,7 @@ function exportVCard(){
    Все они — обычные ссылки, страница в переход не вмешивается: телефон делает
    всё сам. JS добавляет только тактильный отклик, а для контакта — предупреждение
    во встроенных браузерах соцсетей и режим пересборки файла. */
-document.querySelectorAll('.cta, .links a').forEach(function(el){
+document.querySelectorAll('.cta, .links a, .share, .promo').forEach(function(el){
   el.addEventListener('click', function(e){
     if (navigator.vibrate) { try { navigator.vibrate(12); } catch(err){} }
 
